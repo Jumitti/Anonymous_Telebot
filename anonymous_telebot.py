@@ -24,7 +24,7 @@ def secret():
 
 
 def help(chat_id):
-    help_text = " /help - For help obviously\n/users - List of users\n\nHow to send message to someone (e.g. USER1):\n/USER1 Hello World\n/delete_account - To delete your account here\n\nIf you need more help send message to /USEROWNER"
+    help_text = " /help - For help obviously\n/users - List of users\n/delete_account - To delete your account here\n\nHow to send message to someone (e.g. USER1):\n/USER1 Hello World\n\nIf you need more help send message to /USEROWNER"
     bot.sendMessage(chat_id, help_text, parse_mode='HTML')
 
 
