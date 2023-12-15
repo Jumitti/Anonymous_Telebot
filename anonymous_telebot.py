@@ -23,8 +23,29 @@ def secret():
     return chat_id_key, chat_id_owner, password, token
 
 
+def change_password(new_password):
+    script_directory = os.path.dirname(os.path.abspath(__file__))
+    secrets_path = os.path.join(script_directory, 'SECRETS.json')
+    with open(secrets_path, 'r') as secrets_file:
+        secrets = json.load(secrets_file)
+
+    # Changer le mot de passe
+    secrets['password'] = new_password
+
+    # Écrire les modifications dans le fichier JSON
+    with open(secrets_path, 'w') as secrets_file:
+        json.dump(secrets, secrets_file)
+
+
+def qta_set(chat_id, answer):
+    qta[chat_id] = {'answer': answer}
+
+
 def help(chat_id):
-    help_text = " /help - For help obviously\n/users - List of users\n/delete_account - To delete your account here\n\nHow to send message to someone (e.g. USER1):\n/USER1 Hello World\n\nIf you need more help send message to /USEROWNER"
+    help_text = " /help - For help obviously\n/users - List of users\n/delete_account - To delete your account here\n/REPORT - To report someone. /USEROWNER will contact you.\n\n" \
+                "How to send message to someone (e.g. USER1):\n/USER1 Hello World\n\n" \
+                "You can also send pictures, photos and videos by adding recipient to caption like for message\n\n" \
+                "If you need more help send message to /USEROWNER\n\n"
     bot.sendMessage(chat_id, help_text, parse_mode='HTML')
 
 
@@ -39,8 +60,10 @@ def users(chat_id):
 def handle(msg):
     content_type, _, chat_id = telepot.glance(msg)
 
-    for key in msg:
-        print(f'{key}:{msg[key]}')
+    try:
+        answer = qta[chat_id]['answer']
+    except KeyError:
+        answer = '0'
 
     # Type of message
     if content_type == "text":  # TEXT
@@ -74,6 +97,17 @@ def handle(msg):
         elif command == '/delete_account' and chat_id != chat_id_owner:
             bot.sendMessage(chat_id, f"See you soon {inverse_chat_id_verified[chat_id]}")
             del chat_id_verified[inverse_chat_id_verified[chat_id]]
+
+        elif command == '/REPORT':
+            bot.sendMessage(chat_id, f'Who wanted to report you?')
+            answer = 1
+            qta_set(chat_id, answer)
+
+        elif answer == 1:
+            del qta[chat_id]
+            bot.sendMessage(chat_id,
+                            f"/USEROWNER is alerted about your report about {command}. You will be contacted soon by /USEROWNER")
+            bot.sendMessage(chat_id_owner, f"REPORT of {command} by {inverse_chat_id_verified[chat_id]}")
 
         # Message from VERIFIED
         elif command.startswith("/USER") and chat_id != chat_id_owner:
@@ -115,13 +149,30 @@ def handle(msg):
                         else:
                             bot.sendMessage(chat_id_verified[id_verified],
                                             f"From /USEROWNER to {command}")
+            elif command.startswith("/setpassword "):
+                new_password = command.split("/setpassword ")[1]
+                change_password(new_password)
+                _, _, password, _ = secret()
+                bot.sendMessage(chat_id_owner, f"Password changed to {password}")
+            elif command == "/password":
+                _, _, password, _ = secret()
+                bot.sendMessage(chat_id_owner, f"Password: {password}")
+            elif command.startswith("/DEL "):
+                user = command.split("/DEL ")[1]
+                if user in inverse_chat_id_verified.values():
+                    bot.sendMessage(chat_id_verified[user], "Access removed. You are banned.")
+                    chat_id_banned.append(chat_id_verified[user])
+                    del chat_id_verified[user]
+                    bot.sendMessage(chat_id, f"{user} banned.")
 
     # Connection to the Anonymous Bot
     elif chat_id not in chat_id_key:
-        if chat_id not in chat_id_waiting and chat_id not in chat_id_verified.values():
+        if chat_id not in chat_id_waiting and chat_id not in chat_id_verified.values() and chat_id not in chat_id_banned:
             chat_id_waiting.append(chat_id)
             message_to_unknown_id = f'Welcome to Anonymous TelegramBot, please enter password.'
             bot.sendMessage(chat_id, message_to_unknown_id)
+        elif chat_id in chat_id_banned:
+            bot.sendMessage(chat_id, f"Access removed. You are banned.")
         else:
             _, _, password, _ = secret()
             if command == password:
@@ -137,7 +188,9 @@ def handle(msg):
 
 chat_id_waiting = []
 chat_id_verified = {}
+chat_id_banned = []
 inverse_chat_id_verified = {}
+qta = {}
 
 chat_id_key, chat_id_owner, _, token = secret()
 bot = telepot.Bot(token)
@@ -147,4 +200,4 @@ for id_user in chat_id_key:
     bot.sendMessage(id_user, 'Anonymous ChatBot open')
 
 while True:
-    time.sleep(10)
+    time.sleep(1)
