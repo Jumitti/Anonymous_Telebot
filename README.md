@@ -94,7 +94,7 @@ List of banned users:
      - In ```anonymoustelebot``` folder, open a terminal:
      ```
      sudo 777 anonymous_telebot.py
-     sudo 777 SECRETS.py
+     sudo 777 SECRETS.json
      ```
 3. Config ```SECRETS.json``` in ```anonymoustelebot``` folder
 
