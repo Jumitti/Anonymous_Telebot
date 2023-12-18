@@ -31,7 +31,7 @@ An example is worth 1,000 words: [Anonymous Telebot](https://t.me/keepthesecret_
 
 1. Connect to [Anonymous Telebot](https://t.me/keepthesecret_bot):
    - A welcome message is sent to you, asking for a password.
-2. Send the password: AnonymousTelebot@
+2. For password, send me a message
 3. You have access to the chat ! :)
 
 ## How to use (For USER)
